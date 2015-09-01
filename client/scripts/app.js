@@ -4,6 +4,7 @@ var app = {
   messages: {},
   chatBox: document.getElementById("chats"),
   room: null,
+  lastMessage: undefined,
 
   init: function() {
     var self = this;
@@ -39,17 +40,14 @@ var app = {
                       <span class=\"timestamp\">" + moment(obj.createdAt).format("LLL") + "</span> \
                     </div>";
 
-      if(lastMessage){
-        console.log(lastMessage.text + " " + obj.text);
-      }
-      //console.log(!lastMessage || lastMessage.text !== obj.text);
-      if(lastMessage && (lastMessage.text === obj.text && lastMessage.roomname === obj.roomname)){
-        lastMessage.count++;
-        console.log("Found a duplicate: "+ user + " " + lastMessage.text);
-        $('#'+user).children().last().addClass("content").text(lastMessage.count);
+      //console.log(!this.lastMessage || this.lastMessage.text !== obj.text);
+      if(this.lastMessage && (this.lastMessage.text === obj.text && this.lastMessage.roomname === obj.roomname)){
+        this.lastMessage.count++;
+        console.log("Found a duplicate: "+ user + " " + this.lastMessage.text);
+        $("#chats #"+user).last().addClass("content").html(this.lastMessage.count);
       } else{
-        lastMessage = obj;
-        lastMessage.count = 1;
+        this.lastMessage = obj;
+        this.lastMessage.count = 1;
         $("#chats").append(result);
       }
       //console.log($('#chats').children().last().html() === result);
@@ -57,7 +55,7 @@ var app = {
     }
 
     var results;
-    var lastMessage;
+
 
     //fetch messages
     var self = this;
