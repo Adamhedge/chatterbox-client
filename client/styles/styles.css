@@ -18,6 +18,22 @@ body {
 #chats {
     overflow-y: scroll;
     height: 400px;
+    padding:50px;
+    padding-left: 45px;
+    padding-right: 60px;
+
+}
+
+.chatCount {
+    width:15px;
+    background-color:white;
+    display:inline-block;
+}
+
+.chatCount .content {
+    border-radius:5px;
+    background-color:blue;
+    color:white;
 }
 
 #main h1 {
@@ -68,6 +84,9 @@ form input[type=text] {
     padding: 5px;
     margin-bottom: 5px;
     background-color: #eee;
+    word-wrap:break-word;
+    display:inline-block;
+    width:94%;
 }
 
 .chat .username {
