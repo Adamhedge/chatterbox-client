@@ -9,7 +9,7 @@ var app = {
   init: function() {
     var self = this;
     this.fetch(function() {
-      self.display("<b>Welcome to Chatterbox!<b>");
+      self.display("<b>Welcome to Chatterbox!</b>");
       self.display("You are currently in the <b>general area</b>.");
       self.display("Type <b>/list</b> to view all available rooms.");
       self.display("Please type <b>/join [room]</b> to join a specific room or create a new room.");
