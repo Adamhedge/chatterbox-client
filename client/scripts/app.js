@@ -14,6 +14,7 @@ var app = {
       self.display("Type <b>/list</b> to view all available rooms.");
       self.display("Please type <b>/join [room]</b> to join a specific room or create a new room.");
       self.display("You can return to the general area by leaving a room with <b>/leave</b>.");
+      self.display("Clear the chat log by typing <b>/clear</b>.");
       self.display("Type <b>/help</b> to view all available commands.");
       self.setScroll();
     });
@@ -40,17 +41,14 @@ var app = {
                       <span class=\"timestamp\">" + moment(obj.createdAt).format("LLL") + "</span> \
                     </div>";
 
-      //console.log(!this.lastMessage || this.lastMessage.text !== obj.text);
       if(this.lastMessage && (this.lastMessage.text === obj.text && this.lastMessage.roomname === obj.roomname)){
         this.lastMessage.count++;
-        console.log("Found a duplicate: "+ user + " " + this.lastMessage.text);
         $("#chats #"+user).last().addClass("content").html(this.lastMessage.count);
       } else{
         this.lastMessage = obj;
         this.lastMessage.count = 1;
         $("#chats").append(result);
       }
-      //console.log($('#chats').children().last().html() === result);
       return result;
     }
 
@@ -67,7 +65,6 @@ var app = {
         for(var i = results.length - 1; i >= 0; i --) {
           if(!(results[i].objectId in self.messages)) {
             self.messages[results[i].objectId] = results[i];
-            //console.log(results[i].roomname, self.room);
             if (self.room !== null) {
               if (results[i].roomname === self.room) {
                 createHTMLMessage(results[i]);
@@ -96,7 +93,7 @@ var app = {
     } else {
       var userName = window.location.search;
       userName = htmlEntities(userName.substring(userName.indexOf('=')+1));
-      var msg = htmlEntities($("#message").val());
+      var msg = $("#message").val();
       var room = this.room;
     }
 
@@ -164,8 +161,11 @@ var app = {
       this.display("<b>/list</b>: View all available rooms.");
       this.display("<b>/join [room]</b>: join a specific rooom or create a new room.");
       this.display("<b>/leave</b>: Leave current room and go back to general area");
+      this.display("<b>/clear</b>: Clears the chatroom log.");
       this.display("<b>/help</b>: This menu.");
       this.setScroll();
+    } else if (parts[0] === "clear") {
+      this.clearMessages();
     } else {
       this.display("<b>*</b>Unknown command");
     }
