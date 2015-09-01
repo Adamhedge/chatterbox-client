@@ -3,8 +3,19 @@ var app = {
   server: 'https://api.parse.com/1/classes/chatterbox',
   messages: {},
   chatBox: document.getElementById("chats"),
+  room: null,
 
   init: function() {
+    var self = this;
+    this.fetch(function() {
+      self.display("<b>Welcome to Chatterbox!<b>");
+      self.display("You are currently in the <b>general area</b>.");
+      self.display("Type <b>/list</b> to view all available rooms.");
+      self.display("Please type <b>/join [room]</b> to join a specific room or create a new room.");
+      self.display("You can return to the general area by leaving a room with <b>/leave</b>.");
+      self.display("Type <b>/help</b> to view all available commands.");
+      self.setScroll();
+    });
     return true;
   },
 
@@ -12,12 +23,17 @@ var app = {
     this.chatBox.scrollTop = this.chatBox.scrollHeight;
   },
 
-  fetch: function(){
+  fetch: function(cb){
     var createHTMLMessage = function(obj) {
       var message = htmlEntities(obj.text);
       var user    = htmlEntities(obj.username);
+      var room    = obj.roomname;
+      if (room === undefined || room === null || room === "") {
+        room = "*";
+      }
+
       return "<div class=\"chat\"> \
-                <span class=\"username\" style=\"color:" + colorify(user) + "\">" + user + "</span>: " + message + " \
+                [" + room + "] <span class=\"username\" style=\"color:" + colorify(user) + "\">" + user + "</span>: " + message + " \
                 <span class=\"timestamp\">" + moment(obj.createdAt).format("LLL") + "</span> \
               </div>";
     }
@@ -33,11 +49,18 @@ var app = {
         for(var i = results.length - 1; i >= 0; i --) {
           if(!(results[i].objectId in self.messages)) {
             self.messages[results[i].objectId] = results[i];
-            var str = createHTMLMessage(results[i]);
-            $("#chats").append(str);
+            console.log(results[i].roomname, self.room);
+            if (self.room !== null) {
+              if (results[i].roomname === self.room) {
+                $("#chats").append(createHTMLMessage(results[i]));
+              }
+            } else {
+              $("#chats").append(createHTMLMessage(results[i]));
+            }
           }
         }
         self.setScroll();
+        typeof cb === 'function' && cb();
       },
       error: function (data) {
         console.error('chatterbox: Failed to get messages');
@@ -56,7 +79,7 @@ var app = {
       var userName = window.location.search;
       userName = htmlEntities(userName.substring(userName.indexOf('=')+1));
       var msg = htmlEntities($("#message").val());
-      var room = "blah";
+      var room = this.room;
     }
 
     $.ajax({
@@ -82,41 +105,141 @@ var app = {
 
   },
 
-  clearMessages: function(){
+  clearMessages: function(cb){
     $("#chats").html("");
+    typeof cb === 'function' && cb();
   },
 
   addMessage: function(message){
     this.send(message);
+  },
+
+
+
+  cmd: function(command) {
+    command = command.slice(1);
+    var parts = command.split(" ");
+
+    if (parts[0] === "list") {
+      var rooms = this.getRooms();
+      var self = this;
+
+      if (rooms) {
+        this.display("<b>" + rooms[0].length + " Available Room" + (rooms.length === 1 ? "" : "s") + "</b>");
+        this.display("---------------");
+
+        var a = 0;
+        rooms[0].forEach(function(room) {
+          self.display("#" + ++a + " " + room + " - " + rooms[1][room] + " message" + (rooms[1][room] === 1 ? "" : "s"));
+        });
+      }
+    } else if (parts[0] === "join") {
+      this.join(parts.slice(1).join(" "));
+    } else if (parts[0] === "leave") {
+      if (this.room !== null) {
+        this.leave();
+      } else {
+        this.display("You are not in a room.")
+      }
+    } else if (parts[0] === "help") {
+      //displayHelp();
+    } else {
+      this.display("<b>*</b>Unknown command");
+    }
+    $("#message").val("");
+    app.setScroll();
+  },
+
+  display: function(message) {
+    $("#chats").append("<div class=\"chat\"> \
+      " + message + " \
+      <span class=\"timestamp\">" + moment(new Date().getTime()).format("LLL") + "</span> \
+    </div>");
+  },
+
+  getRooms: function() {
+    var self = this;
+    var rooms = [];
+
+    Object.keys(this.messages).forEach(function(index) {
+      var message = self.messages[index];
+      var room = message.roomname;
+      if (room !== undefined && room !== null && room !== "") {
+        rooms.push(room)
+      }
+    });
+    return [uniq(rooms), count(rooms)];
+
+    function uniq(arr) {
+      var seen = {};
+      return arr.filter(function(item) {
+          return seen.hasOwnProperty(item) ? false : (seen[item] = true);
+      });
+    }
+
+    function count(arr) {
+      var counts = {};
+
+      for(var i = 0; i< arr.length; i++) {
+          var num = arr[i];
+          counts[num] = counts[num] ? counts[num]+1 : 1;
+      }
+      return counts;
+    }
+  },
+
+  join: function(name) {
+    this.room = name;
+    var self = this;
+    //this.clearMessages(function() {
+      self.fetch(function() {
+        self.display("");
+        self.display("You have joined <b>" + self.room + "</b>.");
+        self.setScroll();
+      });
+    //});
+  },
+
+  leave: function() {
+    this.room = null;
+    var self = this;
+    //this.clearMessages(function() {
+      self.fetch(function() {
+        self.display("");
+        self.display("You have joined <b>general area</b>.");
+        self.setScroll();
+      });
+    //});
   }
 
 };
 
-$('#send').click(function(){
-  app.send();
-  e.preventDefault();
-  app.setScroll();
+$('#send').on("click submit", function(){
+  // Detect command
+  if ($("#message").val()[0] == "/") {
+    app.cmd($("#message").val());
+  } else {
+    app.send();
+    app.setScroll();
+  }
+  return false;
 });
 
 $('#message').keypress(function (e) {
-  if (e.which == 13) {
-
-    app.send();
-    e.preventDefault();
-    app.setScroll();
+  if (e.which === 13) {
+    // Detect command
+    if ($("#message").val()[0] == "/") {
+      app.cmd($("#message").val());
+    } else {
+      app.send();
+      app.setScroll();
+    }
+    return false;
   }
 });
 
-$("#send").submit(function(){
-  app.send();
-  e.preventDefault();
-  app.setScroll();
-});
-
-
 $(document).ready(function(){
   app.init();
-  app.fetch();
 });
 
 window.setInterval(function() {
