@@ -30,10 +30,13 @@ body {
     display:inline-block;
 }
 
-.chatCount .content {
+.content {
     border-radius:5px;
     background-color:blue;
     color:white;
+    size: 9;
+    font-size:x-small;
+    text-align:center;
 }
 
 #main h1 {
