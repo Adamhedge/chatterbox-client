@@ -35,7 +35,7 @@ var app = {
       var result =  "<div id=\"" + user + "\" class=\"chatCount\"> \
                       </div> \
                     <div class=\"chat\"> \
-                      [" + room + "] <<span class=\"username\" style=\"color:" + colorify(user) + "\">" + user + "</span>: " + message + " \
+                      [" + room + "] <span class=\"username\" style=\"color:" + colorify(user) + "\">" + user + "</span>: " + message + " \
                       <span class=\"timestamp\">" + moment(obj.createdAt).format("LLL") + "</span> \
                     </div>";
 
@@ -45,7 +45,7 @@ var app = {
       //console.log(!lastMessage || lastMessage.text !== obj.text);
       if(lastMessage && (lastMessage.text === obj.text && lastMessage.roomname === obj.roomname)){
         lastMessage.count++;
-        console.log("Found a duplicate: "+ lastMessage.text);
+        console.log("Found a duplicate: "+ user + " " + lastMessage.text);
         $('#'+user).children().last().addClass("content").text(lastMessage.count);
       } else{
         lastMessage = obj;
@@ -58,6 +58,7 @@ var app = {
 
     var results;
     var lastMessage;
+
     //fetch messages
     var self = this;
     $.ajax({
@@ -68,13 +69,13 @@ var app = {
         for(var i = results.length - 1; i >= 0; i --) {
           if(!(results[i].objectId in self.messages)) {
             self.messages[results[i].objectId] = results[i];
-            console.log(results[i].roomname, self.room);
+            //console.log(results[i].roomname, self.room);
             if (self.room !== null) {
               if (results[i].roomname === self.room) {
-                $("#chats").append(createHTMLMessage(results[i]));
+                createHTMLMessage(results[i]);
               }
             } else {
-              $("#chats").append(createHTMLMessage(results[i]));
+              createHTMLMessage(results[i]);
             }
           }
         }
@@ -170,7 +171,9 @@ var app = {
   },
 
   display: function(message) {
-    $("#chats").append("<div class=\"chat\"> \
+    $("#chats").append("<div class=\"chatCount\"> \
+      </div> \
+      <div class=\"chat\"> \
       " + message + " \
       <span class=\"timestamp\">" + moment(new Date().getTime()).format("LLL") + "</span> \
     </div>");
