@@ -162,7 +162,12 @@ var app = {
         this.display("You are not in a room.")
       }
     } else if (parts[0] === "help") {
-      //displayHelp();
+      this.display("<b>Chatterbox help menu<b>");
+      this.display("<b>/list</b>: View all available rooms.");
+      this.display("<b>/join [room]</b>: join a specific rooom or create a new room.");
+      this.display("<b>/leave</b>: Leave current room and go back to general area");
+      this.display("<b>/help</b>: This menu.");
+      this.setScroll();
     } else {
       this.display("<b>*</b>Unknown command");
     }
