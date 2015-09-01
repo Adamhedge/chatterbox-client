@@ -27,18 +27,37 @@ var app = {
     var createHTMLMessage = function(obj) {
       var message = htmlEntities(obj.text);
       var user    = htmlEntities(obj.username);
-      var room    = obj.roomname;
+      var room = obj.roomname;
       if (room === undefined || room === null || room === "") {
         room = "*";
       }
 
-      return "<div class=\"chat\"> \
-                [" + room + "] <span class=\"username\" style=\"color:" + colorify(user) + "\">" + user + "</span>: " + message + " \
-                <span class=\"timestamp\">" + moment(obj.createdAt).format("LLL") + "</span> \
-              </div>";
+      var result =  "<div id=\"" + user + "\" class=\"chatCount\"> \
+                      </div> \
+                    <div class=\"chat\"> \
+                      [" + room + "] <<span class=\"username\" style=\"color:" + colorify(user) + "\">" + user + "</span>: " + message + " \
+                      <span class=\"timestamp\">" + moment(obj.createdAt).format("LLL") + "</span> \
+                    </div>";
+
+      if(lastMessage){
+        console.log(lastMessage.text + " " + obj.text);
+      }
+      //console.log(!lastMessage || lastMessage.text !== obj.text);
+      if(lastMessage && (lastMessage.text === obj.text && lastMessage.roomname === obj.roomname)){
+        lastMessage.count++;
+        console.log("Found a duplicate: "+ lastMessage.text);
+        $('#'+user).children().last().addClass("content").text(lastMessage.count);
+      } else{
+        lastMessage = obj;
+        lastMessage.count = 1;
+        $("#chats").append(result);
+      }
+      //console.log($('#chats').children().last().html() === result);
+      return result;
     }
 
     var results;
+    var lastMessage;
     //fetch messages
     var self = this;
     $.ajax({
