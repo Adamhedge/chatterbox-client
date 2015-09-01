@@ -17,7 +17,7 @@ var app = {
       var message = htmlEntities(obj.text);
       var user    = htmlEntities(obj.username);
       return "<div class=\"chat\"> \
-                <span class=\"username\">" + user + "</span>: " + message + " \
+                <span class=\"username\" style=\"color:" + colorify(user) + "\">" + user + "</span>: " + message + " \
                 <span class=\"timestamp\">" + moment(obj.createdAt).format("LLL") + "</span> \
               </div>";
     }
@@ -80,26 +80,43 @@ var app = {
     });
     $("#message").val("");
 
+  },
+
+  clearMessages: function(){
+    $("#chats").html("");
+  },
+
+  addMessage: function(message){
+    this.send(message);
   }
+
 };
 
-$('#sendMessage').click(function(){
+$('#send').click(function(){
   app.send();
+  e.preventDefault();
+  app.setScroll();
 });
 
 $('#message').keypress(function (e) {
   if (e.which == 13) {
+
     app.send();
     e.preventDefault();
     app.setScroll();
   }
 });
 
+$("#send").submit(function(){
+  app.send();
+  e.preventDefault();
+  app.setScroll();
+});
+
 
 $(document).ready(function(){
   app.init();
   app.fetch();
-  app.send();
 });
 
 window.setInterval(function() {
@@ -115,3 +132,7 @@ var htmlEntities = function(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 };
+
+var colorify = function(name) {
+  return "#" + md5(name).match(/(.{2})/g).slice(0, 3).join("");
+}
