@@ -27,28 +27,29 @@ var app = {
 
   fetch: function(cb){
     var createHTMLMessage = function(obj) {
-      var message = htmlEntities(obj.text);
-      var user    = htmlEntities(obj.username);
-      var room = obj.roomname;
-      if (room === undefined || room === null || room === "") {
+      var message = _.escape(obj.text);
+      var user    = _.escape(obj.username);
+      var room    = _.escape(obj.roomname);
+      if (room === "") {
         room = "*";
       }
 
-      var result =  "<div id=\"" + user + "\" class=\"chatCount\"> \
+      var result =  "<div id=\"" + md5(user) + "\" class=\"chatCount\"> \
                       </div> \
                     <div class=\"chat\"> \
                       [" + room + "] <span class=\"username\" style=\"color:" + colorify(user) + "\">" + user + "</span>: " + message + " \
-                      <span class=\"timestamp\">" + moment(obj.createdAt).format("LLL") + "</span> \
+                      <span class=\"timestamp\">" + moment(obj.createdAt).format("MMMM Do YYYY, h:mm:ss a") + "</span> \
                     </div>";
 
       if(this.lastMessage && (this.lastMessage.text === obj.text && this.lastMessage.roomname === obj.roomname)){
         this.lastMessage.count++;
-        $("#chats #"+user).last().addClass("content").html(this.lastMessage.count);
+        $("#chats #"+md5(user)).last().addClass("content").html(this.lastMessage.count);
       } else{
         this.lastMessage = obj;
         this.lastMessage.count = 1;
         $("#chats").append(result);
       }
+      //console.log($('#chats').children().last().html() === result);
       return result;
     }
 
@@ -65,6 +66,7 @@ var app = {
         for(var i = results.length - 1; i >= 0; i --) {
           if(!(results[i].objectId in self.messages)) {
             self.messages[results[i].objectId] = results[i];
+            //console.log(results[i].roomname, self.room);
             if (self.room !== null) {
               if (results[i].roomname === self.room) {
                 createHTMLMessage(results[i]);
@@ -92,7 +94,7 @@ var app = {
       var room = obj.roomname;
     } else {
       var userName = window.location.search;
-      userName = htmlEntities(userName.substring(userName.indexOf('=')+1));
+      userName = _.escape(userName.substring(userName.indexOf('=')+1));
       var msg = $("#message").val();
       var room = this.room;
     }
@@ -145,7 +147,7 @@ var app = {
 
         var a = 0;
         rooms[0].forEach(function(room) {
-          self.display("#" + ++a + " " + room + " - " + rooms[1][room] + " message" + (rooms[1][room] === 1 ? "" : "s"));
+          self.display("#" + ++a + " " + _.escape(room) + " - " + rooms[1][room] + " message" + (rooms[1][room] === 1 ? "" : "s"));
         });
       }
     } else if (parts[0] === "join") {
@@ -157,7 +159,7 @@ var app = {
         this.display("You are not in a room.")
       }
     } else if (parts[0] === "help") {
-      this.display("<b>Chatterbox help menu<b>");
+      this.display("<b>Chatterbox help menu</b>");
       this.display("<b>/list</b>: View all available rooms.");
       this.display("<b>/join [room]</b>: join a specific rooom or create a new room.");
       this.display("<b>/leave</b>: Leave current room and go back to general area");
@@ -178,7 +180,7 @@ var app = {
       </div> \
       <div class=\"chat\"> \
       " + message + " \
-      <span class=\"timestamp\">" + moment(new Date().getTime()).format("LLL") + "</span> \
+      <span class=\"timestamp\">" + moment(new Date().getTime()).format("MMMM Do YYYY, h:mm:ss a") + "</span> \
     </div>");
   },
 
@@ -219,7 +221,7 @@ var app = {
     //this.clearMessages(function() {
       self.fetch(function() {
         self.display("");
-        self.display("You have joined <b>" + self.room + "</b>.");
+        self.display("You have joined <b>" + _.escape(self.room) + "</b>.");
         self.setScroll();
       });
     //});
@@ -272,14 +274,6 @@ window.setInterval(function() {
     app.fetch();
   }
 }, 1000);
-
-var htmlEntities = function(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-};
 
 var colorify = function(name) {
   return "#" + md5(name).match(/(.{2})/g).slice(0, 3).join("");
